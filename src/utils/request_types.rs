@@ -22,10 +22,9 @@ pub struct DataRequest {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ModelSubmissionRequest {
     pub id: String,
-    pub user_address: String,
-    pub model_commitment: String,
+    pub author: String,
+    pub model: String,
     pub data_id: String,
-    pub problem_id: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

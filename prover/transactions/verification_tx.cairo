@@ -2,6 +2,8 @@ from starkware.cairo.common.cairo_builtins import PoseidonBuiltin, SignatureBuil
 from starkware.cairo.common.dict_access import DictAccess
 
 from starkware.cairo.common.signature import verify_ecdsa_signature
+from starkware.cairo.common.alloc import alloc
+from starkware.cairo.common.builtin_poseidon.poseidon import poseidon_hash_many
 
 from transactions.utils import (
     update_state,

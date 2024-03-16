@@ -13,6 +13,8 @@ from transactions.problem_tx import verify_problem_request
 from transactions.submission_tx import verify_submission_request
 from transactions.verification_tx import verify_verification_request
 
+from verification.ranking import rank_models
+
 from transactions.utils import RequestOutput
 from types.requests import ProblemRequest, DataRequest, ModelSubmissionRequest, VerificationRequest
 
@@ -45,12 +47,16 @@ func main{
 
     // * VERIFY MERKLE TREE UPDATES ***********************
     let tree_depth = 16;
+
+    local init_state_root: felt;
+    local final_state_root: felt;
+    %{
+        ids.init_state_root = program_input["init_state_root"]
+        ids.final_state_root = program_input["final_state_root"]
+    %}
+
     verify_merkle_tree_updates(
-        global_config.dex_state.init_state_root,
-        global_config.dex_state.final_state_root,
-        squashed_state_dict,
-        squashed_state_dict_len,
-        tree_depth,
+        init_state_root, final_state_root, squashed_state_dict, squashed_state_dict_len, tree_depth
     );
 
     local output_ptr: felt = cast(req_output_ptr + 1, felt);
@@ -81,32 +87,32 @@ func verify_requests{
     if (nondet %{ req_type == "problem" %} != 0) {
         verify_problem_request();
 
-        return execute_requests();
+        return verify_requests();
     }
 
     if (nondet %{ req_type == "dataset" %} != 0) {
         verify_dataset_request();
 
-        return execute_requests();
+        return verify_requests();
     }
 
     if (nondet %{ req_type == "model_submission" %} != 0) {
         verify_submission_request();
 
-        return execute_requests();
+        return verify_requests();
     }
     if (nondet %{ req_type == "verification" %} != 0) {
         verify_verification_request();
 
-        return execute_requests();
+        return verify_requests();
     }
     if (nondet %{ req_type == "rank_models" %} != 0) {
         rank_models();
 
-        return execute_requests();
+        return verify_requests();
     } else {
         %{ print("unknown request type: ", current_request) %}
-        return execute_requests();
+        return verify_requests();
     }
 }
 

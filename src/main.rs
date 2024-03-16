@@ -70,7 +70,7 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sy
                     add_cors(&mut response);
                     request.respond(response)?;
                 }
-                "/submission" => {
+                "/models" => {
                     let submission_req: ModelSubmissionRequest =
                         serde_json::from_reader(request.as_reader())?;
 
@@ -87,7 +87,7 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sy
                     add_cors(&mut response);
                     request.respond(response)?;
                 }
-                "/verification" => {
+                "/results" => {
                     let submission_req: VerificationRequest =
                         serde_json::from_reader(request.as_reader())?;
 

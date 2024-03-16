@@ -53,12 +53,11 @@ pub fn execute_submission_request(
 
 pub fn hash_request(submission_req: &ModelSubmissionRequest) -> BigUint {
     let id = BigUint::from_str(&submission_req.id).unwrap();
-    let user_address = BigUint::from_str(&submission_req.user_address).unwrap();
-    let model_commitment = BigUint::from_str(&submission_req.model_commitment).unwrap();
+    let user_address = BigUint::from_str(&submission_req.author).unwrap();
+    let model_commitment = BigUint::from_str(&submission_req.model).unwrap();
     let data_id = BigUint::from_str(&submission_req.data_id).unwrap();
-    let problem_id = BigUint::from_str(&submission_req.problem_id).unwrap();
 
-    let hash_inp = vec![&id, &user_address, &model_commitment, &data_id, &problem_id];
+    let hash_inp = vec![&id, &user_address, &model_commitment, &data_id];
 
     let hash = hash_many(&hash_inp);
 

@@ -1,6 +1,8 @@
 from starkware.cairo.common.cairo_builtins import PoseidonBuiltin, SignatureBuiltin
 from starkware.cairo.common.dict_access import DictAccess
 from starkware.cairo.common.signature import verify_ecdsa_signature
+from starkware.cairo.common.alloc import alloc
+from starkware.cairo.common.builtin_poseidon.poseidon import poseidon_hash_many
 
 from transactions.utils import (
     update_state,
@@ -50,7 +52,7 @@ func handle_program_input{range_check_ptr}() -> ProblemRequest {
         memory[ids.problem_req.address_ + ProblemRequest.timestamp] = int(current_request["timestamp"])
         memory[ids.problem_req.address_ + ProblemRequest.title] = int(current_request["title"])
         memory[ids.problem_req.address_ + ProblemRequest.id] = int(current_request["id"])
-        memory[ids.problem_req.address_ + ProblemRequest.payment] = int(current_request["payment"])
+        memory[ids.problem_req.address_ + ProblemRequest.reward] = int(current_request["reward"])
         memory[ids.problem_req.address_ + ProblemRequest.deadline] = int(current_request["deadline"])
         memory[ids.problem_req.address_ + ProblemRequest.desc_hash] = int(current_request["desc_hash"])
 
@@ -73,7 +75,7 @@ func hash_problem_req{poseidon_ptr: PoseidonBuiltin*}(problem_req: ProblemReques
     assert arr[1] = problem_req.timestamp;
     assert arr[2] = problem_req.title;
     assert arr[3] = problem_req.id;
-    assert arr[4] = problem_req.payment;
+    assert arr[4] = problem_req.reward;
     assert arr[5] = problem_req.deadline;
     assert arr[6] = problem_req.desc_hash;
 

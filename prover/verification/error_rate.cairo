@@ -1,8 +1,9 @@
 from starkware.cairo.common.cairo_builtins import PoseidonBuiltin, SignatureBuiltin
 from starkware.cairo.common.dict_access import DictAccess
 from starkware.cairo.common.math import abs_value
+from starkware.cairo.common.alloc import alloc
 
-from transaction.utils import (
+from transactions.utils import (
     update_state,
     write_request_to_output,
     verify_req_signature,
@@ -37,7 +38,6 @@ func get_model_error_rate{
     ecdsa_ptr: SignatureBuiltin*,
     range_check_ptr,
     state_dict: DictAccess*,
-    req_output_ptr: RequestOutput*,
 }(model_id: felt) -> felt {
     alloc_locals;
 
@@ -46,7 +46,7 @@ func get_model_error_rate{
 
     // Build the consensus matrix
     let (local empty_matrix: felt**) = alloc();
-    let (_, matrix: felt**) = build_consensus_matrix(
+    let (matrix_len, matrix: felt**) = build_consensus_matrix(
         verifications_len,
         verifications,
         0,
@@ -56,8 +56,11 @@ func get_model_error_rate{
     );
 
     // For each verification get error rate and sort the array to get the most accurate models
-    local real_results: felt** = get_real_results();
-    let error_rate: felt = sum_matrix_error_distances(verifications_len, matrix, real_results);
+    let (real_results_len, real_results: felt**) = get_real_results();
+
+    let error_rate: felt = sum_matrix_error_distances(
+        matrix_len, matrix, verifications[0].class_confidence, real_results, 0
+    );
 
     return error_rate;
 }
@@ -69,7 +72,6 @@ func build_consensus_matrix{
     ecdsa_ptr: SignatureBuiltin*,
     range_check_ptr,
     state_dict: DictAccess*,
-    req_output_ptr: RequestOutput*,
 }(
     num_verifications: felt,
     verifications: VerificationRequest*,
@@ -90,7 +92,7 @@ func build_consensus_matrix{
 
     let (local arr: felt*) = alloc();
     let (_, row: felt*) = build_ith_row(
-        num_verifications, verifications, matrix_len, num_columns, arr, alloc
+        num_verifications, verifications, matrix_len, num_columns, 0, arr
     );
 
     assert matrix[matrix_len] = row;
@@ -114,16 +116,16 @@ func sum_matrix_error_distances{range_check_ptr}(
     let row_error_sum: felt = sum_row_error_distances(row_length, matrix[0], real_results[0], 0);
 
     return sum_matrix_error_distances(
-        matrix_len - 1, &matrix[1], row_length, error_sum + row_error_sum
+        matrix_len - 1, &matrix[1], row_length, &real_results[1], error_sum + row_error_sum
     );
 }
 
 func sum_row_error_distances{range_check_ptr}(
     row_len: felt, row: felt*, real_results: felt*, error_sum: felt
-) -> (felt, felt*) {
+) -> felt {
     alloc_locals;
 
-    if (arr_len == 0) {
+    if (row_len == 0) {
         return error_sum;
     }
 
@@ -150,7 +152,7 @@ func build_ith_row{range_check_ptr}(
 
     let median: felt = get_matrix_element_median(num_verifications, verifications, i, arr_len);
 
-    arr[arr_len] = median;
+    assert arr[arr_len] = median;
 
     return build_ith_row(num_verifications, verifications, i, row_length, arr_len + 1, arr);
 }
@@ -207,7 +209,7 @@ func handle_program_input{range_check_ptr}(model_id: felt) -> (felt, Verificatio
     return (verifications_len, verifications);
 }
 
-func get_real_results{range_check_ptr}() -> (felt, VerificationRequest*) {
+func get_real_results{range_check_ptr}() -> (felt, felt**) {
     alloc_locals;
 
     // & This is the public on_chain deposit information
@@ -224,5 +226,5 @@ func get_real_results{range_check_ptr}() -> (felt, VerificationRequest*) {
                 memory[ids.real_results.address_ + i*columns_len + j] = int(current_request["real_results"][i][j])
     %}
 
-    return verification_req;
+    return (real_results_len, real_results);
 }

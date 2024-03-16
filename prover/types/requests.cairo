@@ -20,7 +20,6 @@ struct ModelSubmissionRequest {
     user_address: felt,
     model_commitment: felt,
     data_id: felt,
-    problem_id: felt,
 }
 
 struct VerificationRequest {

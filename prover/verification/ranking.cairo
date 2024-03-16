@@ -3,15 +3,19 @@ from starkware.cairo.common.dict_access import DictAccess
 from starkware.cairo.common.math import abs_value
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.usort import usort
+from starkware.cairo.common.builtin_poseidon.poseidon import poseidon_hash_many
 
-from transaction.utils import (
+from transactions.utils import (
     update_state,
     write_request_to_output,
     verify_req_signature,
     append_flatend_matrix,
+    RequestOutput,
 )
 
 from types.requests import VerificationRequest
+
+from verification.error_rate import build_error_rates_array
 
 // *
 
@@ -21,7 +25,7 @@ func rank_models{
     range_check_ptr,
     state_dict: DictAccess*,
     req_output_ptr: RequestOutput*,
-}() -> (felt, felt*) {
+}() {
     alloc_locals;
 
     local problem_id: felt;
@@ -50,9 +54,9 @@ func rank_models{
         empty_arr,
     );
 
-    let (data_commitment) = poseidon_hash_many(7, arr);
+    let (data_commitment) = poseidon_hash_many(sorted_models_len, sorted_models);
 
-    write_request_to_output(req_output_ptr, data_commitment);
+    write_request_to_output(problem_id, 0, data_commitment);
 
     return ();
 }
@@ -118,7 +122,7 @@ func find_model_id{
         model_ids_len - 1,
         &model_ids[1],
         unsorted_err_rates_len - 1,
-        &unsorted_err_rates_len[1],
+        &unsorted_err_rates[1],
         err_rate,
     );
 }
