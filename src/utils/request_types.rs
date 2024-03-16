@@ -4,19 +4,19 @@ use serde::{Deserialize, Serialize};
 pub struct ProblemRequest {
     pub id: String,
     pub user_address: String,
-    pub timestamp: u32,
+    pub timestamp: String,
     pub title: String,
     pub reward: String,
-    pub deadline: u32,
-    pub desc_hash: String,
+    pub deadline: String,
+    pub description: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DataRequest {
     pub id: String,
-    pub dataset_commitment: String,
+    pub file_train: String,
     pub problem_id: String,
-    pub desc_hash: String,
+    pub description: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -36,6 +36,11 @@ pub struct VerificationRequest {
     pub class_confidence: u32,  // matrix_width (likely small)
     pub num_test_problems: u32, // matrix_height (likely large)
     pub evaluations: Vec<Vec<u32>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RankModels {
+    pub problem_id: String,
 }
 
 // * Serializations * //

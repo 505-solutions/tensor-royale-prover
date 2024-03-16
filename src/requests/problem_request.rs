@@ -59,7 +59,7 @@ pub fn hash_request(problem_req: &ProblemRequest) -> BigUint {
     let title = BigUint::from_str(&problem_req.title).unwrap();
     let reward = BigUint::from_str(&problem_req.reward).unwrap();
     let deadline = BigUint::from_str(&problem_req.deadline.to_string()).unwrap();
-    let desc_hash = BigUint::from_str(&problem_req.desc_hash).unwrap();
+    let desc_hash = BigUint::from_str(&problem_req.description).unwrap();
 
     let hash_inp = vec![
         &id,

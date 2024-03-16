@@ -2,7 +2,6 @@ use std::{collections::HashMap, sync::Arc};
 
 use num_bigint::BigUint;
 use parking_lot::lock_api::Mutex;
-use serde::ser;
 use serde_json::Value;
 use tensor_royale_prover::{
     requests::{
@@ -34,7 +33,7 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sy
     for mut request in server.incoming_requests() {
         if *request.method() == Method::Get && request.url() == "/test" {
             let mut response =
-                Response::from_string("Greetings from TensorRoyale prover").with_status_code(404);
+                Response::from_string("Greetings from TensorRoyale prover").with_status_code(200);
             add_cors(&mut response);
             request.respond(response)?;
         } else if *request.method() == Method::Post {
@@ -49,6 +48,8 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sy
                         &swap_output_json,
                     );
 
+                    println!("tx_commitment: {}", tx_commitment);
+
                     let mut response = Response::from_string(tx_commitment).with_status_code(200);
                     add_cors(&mut response);
                     request.respond(response)?;
@@ -62,6 +63,8 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sy
                         &updated_state_hashes,
                         &swap_output_json,
                     );
+
+                    println!("tx_commitment: {}", tx_commitment);
 
                     let mut response = Response::from_string(tx_commitment).with_status_code(200);
                     add_cors(&mut response);
@@ -78,6 +81,8 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sy
                         &swap_output_json,
                     );
 
+                    println!("tx_commitment: {}", tx_commitment);
+
                     let mut response = Response::from_string(tx_commitment).with_status_code(200);
                     add_cors(&mut response);
                     request.respond(response)?;
@@ -92,6 +97,8 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sy
                         &updated_state_hashes,
                         &swap_output_json,
                     );
+
+                    println!("tx_commitment: {}", tx_commitment);
 
                     let mut response = Response::from_string(tx_commitment).with_status_code(200);
                     add_cors(&mut response);

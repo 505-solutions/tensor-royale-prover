@@ -41,7 +41,7 @@ func get_model_error_rate{
 }(model_id: felt) -> felt {
     alloc_locals;
 
-    let (verifications_len, verifications: VerificationRequest*) = handle_program_input();
+    let (verifications_len, verifications: VerificationRequest*) = handle_program_input(model_id);
     // TODO: Check that all verifications exist in the state and are for the same problem
 
     // Build the consensus matrix
@@ -178,7 +178,7 @@ func sort_models_by_error_rate{range_check_ptr}(
 }
 
 // * PROGRAM INPUT ================================================
-func handle_program_input{range_check_ptr}() -> (felt, VerificationRequest*) {
+func handle_program_input{range_check_ptr}(model_id: felt) -> (felt, VerificationRequest*) {
     alloc_locals;
 
     // & This is the public on_chain deposit information
@@ -186,22 +186,22 @@ func handle_program_input{range_check_ptr}() -> (felt, VerificationRequest*) {
     local verifications_len: felt;
     local verifications: VerificationRequest*;
     %{
-        verifications = current_request["verifications"]
+        verifications = current_request["verifications"][ids.model_id]
         memory[ids.verifications_len] = len(verifications)
         memory[ids.verifications] = verifications_addr = segments.add()
         for i in range(len(verifications)):
-            current_request = verifications[i]
-            memory[verifications_addr + i*ids.VerificationRequest.SIZE + VerificationRequest.id] = int(current_request["id"])
-            memory[verifications_addr + i*ids.VerificationRequest.SIZE  + VerificationRequest.verifier_address] = int(current_request["verifier_address"])
-            memory[verifications_addr + i*ids.VerificationRequest.SIZE  + VerificationRequest.class_confidence] = int(current_request["class_confidence"])
-            memory[verifications_addr + i*ids.VerificationRequest.SIZE  + VerificationRequest.num_test_problems] = int(current_request["num_test_problems"])
+            current_eval = verifications[i]
+            memory[verifications_addr + i*ids.VerificationRequest.SIZE + VerificationRequest.id] = int(current_eval["id"])
+            memory[verifications_addr + i*ids.VerificationRequest.SIZE  + VerificationRequest.verifier_address] = int(current_eval["verifier_address"])
+            memory[verifications_addr + i*ids.VerificationRequest.SIZE  + VerificationRequest.class_confidence] = int(current_eval["class_confidence"])
+            memory[verifications_addr + i*ids.VerificationRequest.SIZE  + VerificationRequest.num_test_problems] = int(current_eval["num_test_problems"])
 
-            rows_len = len(current_request["evaluations"])
-            columns_len = len(current_request["evaluations"][0])
+            rows_len = len(current_eval["evaluations"])
+            columns_len = len(current_eval["evaluations"][0])
             for i in range(rows_len):
                 for j in range(columns_len):
                     matrix_addr_start = i*ids.VerificationRequest.SIZE + VerificationRequest.evaluations
-                    memory[verifications_addr + matrix_addr_start + i*columns_len + j] = int(current_request["evaluations"][i][j])
+                    memory[verifications_addr + matrix_addr_start + i*columns_len + j] = int(current_eval["evaluations"][i][j])
     %}
 
     return (verifications_len, verifications);

@@ -53,9 +53,9 @@ pub fn execute_data_request(
 
 pub fn hash_request(dataset_req: &DataRequest) -> BigUint {
     let id = BigUint::from_str(&dataset_req.id).unwrap();
-    let dataset_commitment = BigUint::from_str(&dataset_req.dataset_commitment).unwrap();
+    let dataset_commitment = BigUint::from_str(&dataset_req.file_train).unwrap();
     let problem_id = BigUint::from_str(&dataset_req.problem_id).unwrap();
-    let desc_hash = BigUint::from_str(&dataset_req.desc_hash).unwrap();
+    let desc_hash = BigUint::from_str(&dataset_req.description).unwrap();
 
     let hash_inp = vec![&id, &dataset_commitment, &problem_id, &desc_hash];
 

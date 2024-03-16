@@ -1,15 +1,10 @@
 use num_bigint::BigUint;
 use parking_lot::Mutex;
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
-use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::{collections::HashMap, path::Path, sync::Arc, time::SystemTime};
 
 use crate::trees::{superficial_tree::SuperficialTree, Tree};
 
-/// Gets all the relevant info for this batch and stores it in a struct
-/// to be used by _transition_state. It also resets all the relevant state
-/// variables so that the next batch can begin.
 pub fn finalize_batch(
     state_tree: &Arc<Mutex<SuperficialTree>>,
     updated_state_hashes: &Arc<Mutex<HashMap<u64, BigUint>>>,
@@ -19,9 +14,6 @@ pub fn finalize_batch(
     let state_tree = state_tree.clone();
     let mut state_tree = state_tree.lock();
     state_tree.update_zero_idxs();
-
-    // let main_storage = main_storage.clone();
-    // let mut main_storage_m = main_storage.lock();
 
     // ? Update the merkle trees and get the new roots and preimages
     let updated_state_hashes = updated_state_hashes.lock();
@@ -61,14 +53,11 @@ pub fn finalize_batch(
 pub fn update_trees(
     updated_state_hashes: HashMap<u64, BigUint>,
 ) -> Result<(BigUint, BigUint, Map<String, Value>), String> {
-    // * UPDATE SPOT TREES  -------------------------------------------------------------------------------------
-    let mut updated_root_hashes: HashMap<u64, BigUint> = HashMap::new(); // the new roots of all tree partitions
-
     let mut preimage_json: Map<String, Value> = Map::new();
 
     // ? use the newly generated roots to update the state tree
     let (prev_spot_root, new_spot_root) =
-        tree_partition_update(updated_root_hashes, &mut preimage_json, u32::MAX)?;
+        tree_partition_update(updated_state_hashes, &mut preimage_json, u32::MAX)?;
 
     Ok((prev_spot_root, new_spot_root, preimage_json))
 }

@@ -1,3 +1,4 @@
+from starkware.cairo.common.cairo_builtins import PoseidonBuiltin, SignatureBuiltin, HashBuiltin
 from starkware.cairo.common.dict import dict_new, dict_write, dict_update, dict_squash, dict_read
 from starkware.cairo.common.dict_access import DictAccess
 
@@ -61,7 +62,7 @@ func verify_req_signature{ecdsa_ptr: SignatureBuiltin*}(problem_hash: felt, user
 
 // * ==========================================================
 
-func append_flatend_matrix{poseidon_ptr: PoseidonBuiltin*}(
+func append_flatend_matrix(
     base_arr_len: felt, base_arr: felt*, matrix_width: felt, matrix_height: felt, matrix: felt**
 ) -> (res: felt) {
     if (matrix_height == 0) {
@@ -82,9 +83,9 @@ func append_flatend_matrix{poseidon_ptr: PoseidonBuiltin*}(
     );
 }
 
-func push_to_array{poseidon_ptr: PoseidonBuiltin*}(
-    base_arr_len: felt, base_arr: felt*, addition_len: felt, addition: felt*
-) -> (res: felt) {
+func push_to_array(base_arr_len: felt, base_arr: felt*, addition_len: felt, addition: felt*) -> (
+    res: felt
+) {
     if (addition_len == 0) {
         return (base_arr_len, base_arr);
     }

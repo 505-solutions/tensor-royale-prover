@@ -1,11 +1,13 @@
 from starkware.cairo.common.cairo_builtins import PoseidonBuiltin, SignatureBuiltin
 from starkware.cairo.common.dict_access import DictAccess
+from starkware.cairo.common.signature import verify_ecdsa_signature
 
-from transaction.utils import (
+from transactions.utils import (
     update_state,
     write_request_to_output,
     verify_req_signature,
     push_to_array,
+    RequestOutput,
 )
 
 from types.requests import ProblemRequest
