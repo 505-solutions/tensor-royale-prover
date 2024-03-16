@@ -1,10 +1,9 @@
-use async_std::path::Path;
 use num_bigint::BigUint;
 use parking_lot::Mutex;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
-use std::{collections::HashMap, sync::Arc, time::SystemTime};
+use std::{collections::HashMap, path::Path, sync::Arc, time::SystemTime};
 
 use crate::trees::{superficial_tree::SuperficialTree, Tree};
 

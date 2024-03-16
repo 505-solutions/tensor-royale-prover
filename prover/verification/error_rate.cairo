@@ -41,19 +41,13 @@ func get_model_error_rate{
 }(model_id: felt) -> felt {
     alloc_locals;
 
-    local num_verifications: felt;
-    %{
-        verifications = current_request["verifications"][ids.model_id] # List of VerificationRequest
-        ids.num_verifications = len(verifications)
-    %}
-
-    local verifications: VerificationRequest* = handle_program_input();
+    let (verifications_len, verifications: VerificationRequest*) = handle_program_input();
     // TODO: Check that all verifications exist in the state and are for the same problem
 
     // Build the consensus matrix
     let (local empty_matrix: felt**) = alloc();
     let (_, matrix: felt**) = build_consensus_matrix(
-        num_verifications,
+        verifications_len,
         verifications,
         0,
         empty_matrix,
@@ -63,7 +57,7 @@ func get_model_error_rate{
 
     // For each verification get error rate and sort the array to get the most accurate models
     local real_results: felt** = get_real_results();
-    let error_rate: felt = sum_matrix_error_distances(num_verifications, matrix, real_results);
+    let error_rate: felt = sum_matrix_error_distances(verifications_len, matrix, real_results);
 
     return error_rate;
 }
@@ -210,7 +204,7 @@ func handle_program_input{range_check_ptr}() -> (felt, VerificationRequest*) {
                     memory[verifications_addr + matrix_addr_start + i*columns_len + j] = int(current_request["evaluations"][i][j])
     %}
 
-    return verification_req;
+    return (verifications_len, verifications);
 }
 
 func get_real_results{range_check_ptr}() -> (felt, VerificationRequest*) {

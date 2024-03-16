@@ -2,6 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use num_bigint::BigUint;
 use parking_lot::lock_api::Mutex;
+use serde::ser;
 use serde_json::Value;
 use tensor_royale_prover::{
     requests::{
@@ -14,37 +15,29 @@ use tensor_royale_prover::{
         DataRequest, ModelSubmissionRequest, ProblemRequest, VerificationRequest,
     },
 };
-use tiny_http::{Method, Response, Server};
-
-#[derive(serde::Deserialize)]
-struct MyType {
-    pub name: String,
-    pub legs: u32,
-}
+use tiny_http::{Header, Method, Response, Server};
 
 #[async_std::main]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let server = Server::http("0.0.0.0:8800").unwrap();
 
-    let mut state_tree_ = SuperficialTree::new(3);
-    let mut updated_state_hashes_: HashMap<u64, BigUint> = HashMap::new();
-    let mut swap_output_json_: Vec<serde_json::Map<String, Value>> = Vec::new();
+    let state_tree_ = SuperficialTree::new(3);
+    let updated_state_hashes_: HashMap<u64, BigUint> = HashMap::new();
+    let swap_output_json_: Vec<serde_json::Map<String, Value>> = Vec::new();
 
     let state_tree = Arc::new(Mutex::new(state_tree_));
     let updated_state_hashes = Arc::new(Mutex::new(updated_state_hashes_));
     let swap_output_json = Arc::new(Mutex::new(swap_output_json_));
 
+    println!("Server started at port 8800");
+
     for mut request in server.incoming_requests() {
-        // println!(
-        //     "received request! method: {:?}, url: {:?}, headers: {:?}",
-        //     request.method(),
-        //     request.url(),
-        //     request.headers()
-        // );
-
-        // println!("received request! method: {:?}, url: {:?}", request.url());
-
-        if *request.method() == Method::Post {
+        if *request.method() == Method::Get && request.url() == "/test" {
+            let mut response =
+                Response::from_string("Greetings from TensorRoyale prover").with_status_code(404);
+            add_cors(&mut response);
+            request.respond(response)?;
+        } else if *request.method() == Method::Post {
             match request.url() {
                 "/problem" => {
                     let problem_req: ProblemRequest = serde_json::from_reader(request.as_reader())?;
@@ -56,7 +49,8 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sy
                         &swap_output_json,
                     );
 
-                    let response = Response::from_string(tx_commitment).with_status_code(200);
+                    let mut response = Response::from_string(tx_commitment).with_status_code(200);
+                    add_cors(&mut response);
                     request.respond(response)?;
                 }
                 "/dataset" => {
@@ -69,7 +63,8 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sy
                         &swap_output_json,
                     );
 
-                    let response = Response::from_string(tx_commitment).with_status_code(200);
+                    let mut response = Response::from_string(tx_commitment).with_status_code(200);
+                    add_cors(&mut response);
                     request.respond(response)?;
                 }
                 "/submission" => {
@@ -83,7 +78,8 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sy
                         &swap_output_json,
                     );
 
-                    let response = Response::from_string(tx_commitment).with_status_code(200);
+                    let mut response = Response::from_string(tx_commitment).with_status_code(200);
+                    add_cors(&mut response);
                     request.respond(response)?;
                 }
                 "/verification" => {
@@ -97,7 +93,8 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sy
                         &swap_output_json,
                     );
 
-                    let response = Response::from_string(tx_commitment).with_status_code(200);
+                    let mut response = Response::from_string(tx_commitment).with_status_code(200);
+                    add_cors(&mut response);
                     request.respond(response)?;
                 }
                 _ => {
@@ -109,4 +106,19 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sy
     }
 
     Ok(())
+}
+
+pub fn add_cors(response: &mut Response<std::io::Cursor<Vec<u8>>>) {
+    response
+        .add_header(Header::from_bytes(&b"Access-Control-Allow-Origin"[..], &b"*"[..]).unwrap());
+    response.add_header(
+        Header::from_bytes(
+            &b"Access-Control-Allow-Methods"[..],
+            &b"GET, POST, OPTIONS"[..],
+        )
+        .unwrap(),
+    );
+    response.add_header(
+        Header::from_bytes(&b"Access-Control-Allow-Headers"[..], &b"Content-Type"[..]).unwrap(),
+    );
 }

@@ -1,2 +1,2 @@
 pub mod finalize_batch;
-pub mod verify_results;
+pub mod rank_models;
