@@ -11,7 +11,9 @@ from transaction.utils import (
 
 from types.requests import VerificationRequest
 
-func get_verification_result{
+// *
+
+func get_model_error_rate{
     poseidon_ptr: PoseidonBuiltin*,
     ecdsa_ptr: SignatureBuiltin*,
     range_check_ptr,
@@ -26,10 +28,10 @@ func get_verification_result{
         ids.num_verifications = len(verifications)
     %}
 
-    local verifications: VerificationRequest*;  // = handle_input
+    local verifications: VerificationRequest* = handle_program_input();
     // TODO: Check that all verifications exist in the state and are for the same problem
 
-    // TODO: Build the consensus matrix
+    // Build the consensus matrix
     let (local empty_matrix: felt**) = alloc();
     let (_, matrix: felt**) = build_consensus_matrix(
         num_verifications,
@@ -40,20 +42,14 @@ func get_verification_result{
         verifications[0].class_confidence,
     );
 
-    // TODO: For each verification get error rate and sort the array to get the most accurate models
-    local real_results: felt**;  // = handle_input
+    // For each verification get error rate and sort the array to get the most accurate models
+    local real_results: felt** = get_real_results();
     let error_rate: felt = sum_matrix_error_distances(num_verifications, matrix, real_results);
 
     return error_rate;
 }
 
 // * GET ERROR RATE HELPERS ==============================================
-
-func get_error_rate{range_check_ptr}(
-    num_rows: felt, num_columns: felt, matrix: felt**, real_results: felt**
-) -> felt {
-    alloc_locals;
-}
 
 func build_consensus_matrix{
     poseidon_ptr: PoseidonBuiltin*,
@@ -177,31 +173,43 @@ func handle_program_input{range_check_ptr}() -> (felt, VerificationRequest*) {
     local verifications_len: felt;
     local verifications: VerificationRequest*;
     %{
-        verifications_len = current_request["verifications"]
-        memory[ids.verifications_len] = len(notes)
+        verifications = current_request["verifications"]
+        memory[ids.verifications_len] = len(verifications)
         memory[ids.verifications] = verifications_addr = segments.add()
+        for i in range(len(verifications)):
+            current_request = verifications[i]
+            memory[verifications_addr + i*ids.VerificationRequest.SIZE + VerificationRequest.id] = int(current_request["id"])
+            memory[verifications_addr + i*ids.VerificationRequest.SIZE  + VerificationRequest.verifier_address] = int(current_request["verifier_address"])
+            memory[verifications_addr + i*ids.VerificationRequest.SIZE  + VerificationRequest.class_confidence] = int(current_request["class_confidence"])
+            memory[verifications_addr + i*ids.VerificationRequest.SIZE  + VerificationRequest.num_test_problems] = int(current_request["num_test_problems"])
 
-        memory[ids.verification_req.address_ + i*ids.VerificationRequest.SIZE + VerificationRequest.id] = int(current_request["id"])
-        memory[ids.verification_req.address_ + i*ids.VerificationRequest.SIZE  + VerificationRequest.verifier_address] = int(current_request["verifier_address"])
-        memory[ids.verification_req.address_ + i*ids.VerificationRequest.SIZE  + VerificationRequest.class_confidence] = int(current_request["class_confidence"])
-        memory[ids.verification_req.address_ + i*ids.VerificationRequest.SIZE  + VerificationRequest.num_test_problems] = int(current_request["num_test_problems"])
-        memory[ids.verification_req.address_ + i*ids.VerificationRequest.SIZE  + VerificationRequest.evaluations] = int(current_request["evaluations"])
+            rows_len = len(current_request["evaluations"])
+            columns_len = len(current_request["evaluations"][0])
+            for i in range(rows_len):
+                for j in range(columns_len):
+                    matrix_addr_start = i*ids.VerificationRequest.SIZE + VerificationRequest.evaluations
+                    memory[verifications_addr + matrix_addr_start + i*columns_len + j] = int(current_request["evaluations"][i][j])
     %}
 
-    // %{
-    //     notes = current_deposit["notes"]
+    return verification_req;
+}
 
-    // memory[ids.notes_len] = len(notes)
-    //     memory[ids.notes] = notes_addr = segments.add()
-    //     for i in range(len(notes)):
-    //         memory[notes_addr + i*NOTE_SIZE + ADDRESS_OFFSET + 0] = int(notes[i]["address"]["x"])
-    //         memory[notes_addr + i*NOTE_SIZE + ADDRESS_OFFSET + 1] = int(notes[i]["address"]["y"])
-    //         memory[notes_addr + i*NOTE_SIZE + TOKEN_OFFSET] = int(current_deposit["deposit_token"])
-    //         memory[notes_addr + i*NOTE_SIZE + AMOUNT_OFFSET] = int(notes[i]["amount"])
-    //         memory[notes_addr + i*NOTE_SIZE + BLINDING_FACTOR_OFFSET] = int(notes[i]["blinding"])
-    //         memory[notes_addr + i*NOTE_SIZE + INDEX_OFFSET] = int(notes[i]["index"])
-    //         memory[notes_addr + i*NOTE_SIZE + HASH_OFFSET] = int(notes[i]["hash"])
-    // %}
+func get_real_results{range_check_ptr}() -> (felt, VerificationRequest*) {
+    alloc_locals;
+
+    // & This is the public on_chain deposit information
+
+    local real_results_len: felt;
+    local real_results: felt**;
+    %{
+        real_results = current_request["real_results"]
+
+        rows_len = len(current_request["real_results"])
+        columns_len = len(current_request["real_results"][0])
+        for i in range(rows_len):
+            for j in range(columns_len):
+                memory[ids.real_results.address_ + i*columns_len + j] = int(current_request["real_results"][i][j])
+    %}
 
     return verification_req;
 }

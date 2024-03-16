@@ -44,10 +44,11 @@ func handle_program_input{range_check_ptr}() -> DataRequest {
     // & This is the public on_chain deposit information
     local dataset_req: DataRequest;
     %{
-        memory[ids.dataset_req.address_ + DataRequest.id] = int(current_request["id"])
-        memory[ids.dataset_req.address_ + DataRequest.dataset_commitment] = int(current_request["dataset_commitment"])
-        memory[ids.dataset_req.address_ + DataRequest.problem_id] = int(current_request["problem_id"])
-        memory[ids.dataset_req.address_ + DataRequest.desc_hash] = int(current_request["desc_hash"])
+        data_request = current_request["data_request"]
+        memory[ids.dataset_req.address_ + DataRequest.id] = int(data_request["id"])
+        memory[ids.dataset_req.address_ + DataRequest.dataset_commitment] = int(data_request["dataset_commitment"])
+        memory[ids.dataset_req.address_ + DataRequest.problem_id] = int(data_request["problem_id"])
+        memory[ids.dataset_req.address_ + DataRequest.desc_hash] = int(data_request["desc_hash"])
 
         # desc_lines = current_request["desc_lines"]
 

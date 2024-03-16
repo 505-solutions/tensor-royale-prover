@@ -3,7 +3,7 @@ use std::{collections::HashMap, str::FromStr, sync::Arc};
 use num_bigint::BigUint;
 use num_traits::FromPrimitive;
 use parking_lot::Mutex;
-use serde_json::Value;
+use serde_json::{json, Value};
 
 use crate::{
     trees::superficial_tree::SuperficialTree,
@@ -41,6 +41,10 @@ pub fn execute_verification_request(
     json_map.insert(
         String::from("state_index"),
         serde_json::to_value(&zero_idx).unwrap(),
+    );
+    json_map.insert(
+        String::from("signature"),
+        serde_json::to_value(json!({"r": 0, "s": 0})).unwrap(),
     );
 
     swap_output_json.push(json_map);

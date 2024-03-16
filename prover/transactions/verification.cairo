@@ -48,7 +48,12 @@ func handle_program_input{range_check_ptr}() -> VerificationRequest {
         memory[ids.verification_req.address_ + VerificationRequest.verifier_address] = int(current_request["verifier_address"])
         memory[ids.verification_req.address_ + VerificationRequest.class_confidence] = int(current_request["class_confidence"])
         memory[ids.verification_req.address_ + VerificationRequest.num_test_problems] = int(current_request["num_test_problems"])
-        memory[ids.verification_req.address_ + VerificationRequest.evaluations] = int(current_request["evaluations"])
+
+        rows_len = len(current_request["evaluations"])
+        columns_len = len(current_request["evaluations"][0])
+        for i in range(rows_len):
+            for j in range(columns_len):
+                memory[ids.verification_req.address_ + VerificationRequest.evaluations + i*columns_len + j] = int(current_request["evaluations"][i][j])
     %}
 
     return verification_req;

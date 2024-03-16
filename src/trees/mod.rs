@@ -145,23 +145,10 @@ impl Tree {
 
     // I/O Operations --------------------------------------------------
 
-    pub fn store_to_disk(&self, tree_index: u32, is_backup: bool) -> Result<(), Box<dyn Error>> {
-        let str: String;
-        if is_backup {
-            str = "./storage/merkle_trees/state_tree_backup/".to_string() + &tree_index.to_string();
-        } else {
-            str = "./storage/merkle_trees/state_tree/".to_string() + &tree_index.to_string();
-        }
-
-        let path = Path::new(&str);
-        if is_backup {
-            if !Path::new("./storage/merkle_trees/state_tree_backup/").exists() {
-                fs::create_dir("./storage/merkle_trees/state_tree_backup/")?;
-            }
-        } else {
-            if !Path::new("./storage/merkle_trees/state_tree/").exists() {
-                fs::create_dir("./storage/merkle_trees/state_tree/")?;
-            }
+    pub fn store_to_disk(&self) -> Result<(), Box<dyn Error>> {
+        let path = Path::new(&"./storage/state_tree");
+        if !Path::new(path).exists() {
+            fs::create_dir(path)?;
         }
 
         let mut file: File = File::create(path)?;
@@ -186,20 +173,19 @@ impl Tree {
         Ok(())
     }
 
-    pub fn from_disk(tree_index: u32, depth: u32, shift: u32) -> Result<Tree, Box<dyn Error>> {
-        let str = "./storage/merkle_trees/state_tree/";
-        let path_str = str.to_string() + &tree_index.to_string();
+    pub fn from_disk(depth: u32) -> Result<Tree, Box<dyn Error>> {
+        let path_str = "./storage/state_tree".to_string();
         let path = Path::new(&path_str);
 
         let open_res = File::open(path).ok();
         if open_res.is_none() {
-            if Path::new(&str).exists() {
+            if Path::new(&path_str).exists() {
                 File::create(path)?;
-                return Ok(Tree::new(depth, shift));
+                return Ok(Tree::new(depth, 0));
             } else {
-                fs::create_dir(&str)?;
+                fs::create_dir(&path_str)?;
                 File::create(path)?;
-                return Ok(Tree::new(depth, shift));
+                return Ok(Tree::new(depth, 0));
             }
         };
 
@@ -231,7 +217,7 @@ impl Tree {
             inner_nodes,
             root: BigUint::from_str(&decoded.2.as_str()).unwrap(),
             depth: decoded.3,
-            shift,
+            shift: 0,
         })
     }
 

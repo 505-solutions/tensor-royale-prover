@@ -128,7 +128,18 @@ func verify_requests{
         // TODO verify verification request
 
         return execute_requests();
-    } else {
+    } 
+    if (nondet %{ req_type == "rank_models" %} != 0) {
+        // TODO verify verification request
+
+        
+
+
+        return execute_requests();
+    } 
+    
+    
+    else {
         %{ print("unknown request type: ", current_request) %}
         return execute_requests();
     }
