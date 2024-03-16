@@ -24,3 +24,4 @@ http = "1"
 futures-util = { version = "0.3", default-features = false }
 tide = "0.14.0"
 async-std = { version = "1.8.0", features = ["attributes"] }
+tiny_http = "0.11"

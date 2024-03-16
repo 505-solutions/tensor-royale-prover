@@ -1,18 +1,31 @@
-use std::collections::HashMap;
-use std::sync::mpsc;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use num_bigint::BigUint;
-use parking_lot::Mutex;
+use parking_lot::lock_api::Mutex;
 use serde_json::Value;
-use tensor_royale_prover::requests::problem_request::execute_problem_request;
-use tensor_royale_prover::trees::superficial_tree::SuperficialTree;
-use tensor_royale_prover::utils::request_types::ProblemRequest;
-use tide::prelude::*;
-use tide::Request;
+use tensor_royale_prover::{
+    requests::{
+        data_request::execute_data_request, problem_request::execute_problem_request,
+        submission_request::execute_submission_request,
+        verification_request::execute_verification_request,
+    },
+    trees::superficial_tree::SuperficialTree,
+    utils::request_types::{
+        DataRequest, ModelSubmissionRequest, ProblemRequest, VerificationRequest,
+    },
+};
+use tiny_http::{Method, Response, Server};
+
+#[derive(serde::Deserialize)]
+struct MyType {
+    pub name: String,
+    pub legs: u32,
+}
 
 #[async_std::main]
-async fn main() -> tide::Result<()> {
+async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let server = Server::http("0.0.0.0:8800").unwrap();
+
     let mut state_tree_ = SuperficialTree::new(3);
     let mut updated_state_hashes_: HashMap<u64, BigUint> = HashMap::new();
     let mut swap_output_json_: Vec<serde_json::Map<String, Value>> = Vec::new();
@@ -21,42 +34,79 @@ async fn main() -> tide::Result<()> {
     let updated_state_hashes = Arc::new(Mutex::new(updated_state_hashes_));
     let swap_output_json = Arc::new(Mutex::new(swap_output_json_));
 
-    // let (tx, rx) = mpsc::channel();
+    for mut request in server.incoming_requests() {
+        // println!(
+        //     "received request! method: {:?}, url: {:?}, headers: {:?}",
+        //     request.method(),
+        //     request.url(),
+        //     request.headers()
+        // );
 
-    let mut app = tide::new();
-    // app.at("/problems").post(|mut req: Request<()>| async {
-    //     let problem_req: ProblemRequest = req.body_json().await.unwrap();
+        // println!("received request! method: {:?}, url: {:?}", request.url());
 
-    //     let state_tree_c = state_tree.clone();
-    //     let updated_state_hashes_c = updated_state_hashes.clone();
-    //     let swap_output_json_c = swap_output_json.clone();
+        if *request.method() == Method::Post {
+            match request.url() {
+                "/problem" => {
+                    let problem_req: ProblemRequest = serde_json::from_reader(request.as_reader())?;
 
-    //     execute_problem_request(
-    //         problem_req,
-    //         state_tree_c,
-    //         updated_state_hashes_c,
-    //         swap_output_json_c,
-    //     );
+                    let tx_commitment = execute_problem_request(
+                        problem_req,
+                        &state_tree,
+                        &updated_state_hashes,
+                        &swap_output_json,
+                    );
 
-    //     return Ok::<String, tide::Error>(format!("problem request submitted sucessfully").into());
-    // });
-    let state_tree_clone = state_tree.clone();
-    app.listen("127.0.0.1:4000").await?;
+                    let response = Response::from_string(tx_commitment).with_status_code(200);
+                    request.respond(response)?;
+                }
+                "/dataset" => {
+                    let data_req: DataRequest = serde_json::from_reader(request.as_reader())?;
 
-    println!("Listeing on port 4000!");
+                    let tx_commitment = execute_data_request(
+                        data_req,
+                        &state_tree,
+                        &updated_state_hashes,
+                        &swap_output_json,
+                    );
+
+                    let response = Response::from_string(tx_commitment).with_status_code(200);
+                    request.respond(response)?;
+                }
+                "/submission" => {
+                    let submission_req: ModelSubmissionRequest =
+                        serde_json::from_reader(request.as_reader())?;
+
+                    let tx_commitment = execute_submission_request(
+                        submission_req,
+                        &state_tree,
+                        &updated_state_hashes,
+                        &swap_output_json,
+                    );
+
+                    let response = Response::from_string(tx_commitment).with_status_code(200);
+                    request.respond(response)?;
+                }
+                "/verification" => {
+                    let submission_req: VerificationRequest =
+                        serde_json::from_reader(request.as_reader())?;
+
+                    let tx_commitment = execute_verification_request(
+                        submission_req,
+                        &state_tree,
+                        &updated_state_hashes,
+                        &swap_output_json,
+                    );
+
+                    let response = Response::from_string(tx_commitment).with_status_code(200);
+                    request.respond(response)?;
+                }
+                _ => {
+                    let response = Response::from_string("Not Found").with_status_code(404);
+                    request.respond(response)?;
+                }
+            }
+        }
+    }
+
     Ok(())
 }
-
-// async fn order_shoes(mut req: Request<()>) -> tide::Result {
-//     // Spawn a new thread and move the transmitter into it
-//     thread::spawn(move || {
-//         // Send data to the receiver
-//         tx.send("Hello from the spawned thread!").unwrap();
-//     });
-
-//     // Receive the message in the main thread
-//     let received = rx.recv().unwrap();
-//     println!("Received: {}", received);
-
-//     Ok(format!("Hello, {}! I've put in an order for {} shoes", 1, 1).into())
-// }

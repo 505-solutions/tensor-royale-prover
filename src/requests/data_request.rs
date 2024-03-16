@@ -11,10 +11,10 @@ use crate::{
 
 pub fn execute_data_request(
     dataset_req: DataRequest,
-    state_tree_c: Arc<Mutex<SuperficialTree>>,
-    updated_state_hashes_c: Arc<Mutex<HashMap<u64, BigUint>>>,
-    swap_output_json_c: Arc<Mutex<Vec<serde_json::Map<String, Value>>>>,
-) {
+    state_tree_c: &Arc<Mutex<SuperficialTree>>,
+    updated_state_hashes_c: &Arc<Mutex<HashMap<u64, BigUint>>>,
+    swap_output_json_c: &Arc<Mutex<Vec<serde_json::Map<String, Value>>>>,
+) -> String {
     // TODO: verify the signature
     let request_hash = hash_request(&dataset_req);
 
@@ -25,7 +25,7 @@ pub fn execute_data_request(
     // Get request and update the state
     let zero_idx = state_tree.first_zero_idx();
     state_tree.update_leaf_node(&request_hash, zero_idx);
-    updated_state_hashes.insert(zero_idx, request_hash);
+    updated_state_hashes.insert(zero_idx, request_hash.clone());
 
     // build json input for prover
     let mut json_map = serde_json::map::Map::new();
@@ -47,6 +47,8 @@ pub fn execute_data_request(
     );
 
     swap_output_json.push(json_map);
+
+    return request_hash.to_string();
 }
 
 pub fn hash_request(dataset_req: &DataRequest) -> BigUint {

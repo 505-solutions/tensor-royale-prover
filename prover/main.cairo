@@ -7,7 +7,15 @@ from starkware.cairo.common.merkle_multi_update import merkle_multi_update
 from starkware.cairo.common.squash_dict import squash_dict
 from starkware.cairo.common.math import unsigned_div_rem
 from starkware.cairo.common.math_cmp import is_not_zero
-from starkware.cairo.common.cairo_keccak.keccak import finalize_keccak
+
+from transactions.data_tx import verify_dataset_request
+from transactions.problem_tx import verify_problem_request
+from transactions.submission_tx import verify_submission_request
+from transactions.verification_tx import verify_verification_request
+
+from transactions.utils import RequestOutput
+from types.requests import ProblemRequest, DataRequest, ModelSubmissionRequest, VerificationRequest
+
 func main{
     output_ptr,
     pedersen_ptr: HashBuiltin*,
