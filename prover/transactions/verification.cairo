@@ -41,7 +41,6 @@ func verify_verification_request{
 func handle_program_input{range_check_ptr}() -> VerificationRequest {
     alloc_locals;
 
-    // & This is the public on_chain deposit information
     local verification_req: VerificationRequest;
     %{
         memory[ids.verification_req.address_ + VerificationRequest.id] = int(current_request["id"])
@@ -51,9 +50,10 @@ func handle_program_input{range_check_ptr}() -> VerificationRequest {
 
         rows_len = len(current_request["evaluations"])
         columns_len = len(current_request["evaluations"][0])
+        memory[ids.verification_req.address_ + VerificationRequest.evaluations] = matrix_addr = segments.add()
         for i in range(rows_len):
             for j in range(columns_len):
-                memory[ids.verification_req.address_ + VerificationRequest.evaluations + i*columns_len + j] = int(current_request["evaluations"][i][j])
+                memory[matrix_addr + i*columns_len + j] = int(current_request["evaluations"][i][j])
     %}
 
     return verification_req;

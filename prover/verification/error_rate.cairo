@@ -13,6 +13,25 @@ from types.requests import VerificationRequest
 
 // *
 
+func build_error_rates_array{
+    poseidon_ptr: PoseidonBuiltin*,
+    ecdsa_ptr: SignatureBuiltin*,
+    range_check_ptr,
+    state_dict: DictAccess*,
+}(model_ids_len: felt, model_ids: felt*, err_rates_len: felt, err_rates: felt*) -> (felt, felt*) {
+    alloc_locals;
+
+    if (model_ids_len == 0) {
+        return (err_rates_len, err_rates);
+    }
+
+    let error_rate = get_model_error_rate(model_ids[0]);
+
+    assert err_rates[err_rates_len] = error_rate;
+
+    return build_error_rates_array(model_ids_len - 1, &model_ids[1], err_rates_len + 1, err_rates);
+}
+
 func get_model_error_rate{
     poseidon_ptr: PoseidonBuiltin*,
     ecdsa_ptr: SignatureBuiltin*,

@@ -45,40 +45,7 @@ func main{
         tree_depth,
     );
 
-    // * WRITE STATE UPDATES TO THE PROGRAM OUTPUT ******************************
-    %{ stored_indexes = {} %}
-    let (data_commitment: felt) = write_state_updates_to_output(
-        squashed_state_dict,
-        squashed_state_dict_len,
-        note_updates_start,
-        global_config.dex_state.n_output_notes,
-        global_config.dex_state.n_output_positions,
-        global_config.dex_state.n_output_tabs,
-        global_config.dex_state.n_zero_indexes,
-    );
-    local da_output_ptr: felt* = cast(position_escape_output_ptr, felt*);
-    assert da_output_ptr[0] = data_commitment;
-
-    %{ print("da_output_ptr: ", ids.data_commitment) %}
-
-    // * WRITE DEPOSIT AND WITHDRAWAL ACCUMULATED OUTPUTS TO THE PROGRAM OUTPUT ***********
-    let deposit_output_len = (l2_deposit_outputs - l2_deposit_outputs_start) /
-        DepositTransactionOutput.SIZE;
-    let withdraw_output_len = (l2_withdrawal_outputs - l2_withdrawal_outputs_start) /
-        WithdrawalTransactionOutput.SIZE;
-    write_accumulated_hashes_to_output{
-        keccak_ptr=keccak_ptr, accumulated_hashes=accumulated_hashes, global_config=global_config
-    }(
-        deposit_output_len,
-        l2_deposit_outputs_start,
-        withdraw_output_len,
-        l2_withdrawal_outputs_start,
-    );
-
-    // * FINALIZE KECCAK ***************************************************************
-    finalize_keccak(keccak_ptr_start=keccak_ptr_start, keccak_ptr_end=keccak_ptr);
-
-    local output_ptr: felt = cast(da_output_ptr + 1, felt);
+    local output_ptr: felt = cast(req_output_ptr + 1, felt);
 
     %{ print("all good") %}
 
@@ -110,36 +77,26 @@ func verify_requests{
     }
 
     if (nondet %{ req_type == "dataset" %} != 0) {
-        %{ current_deposit = current_request["deposit"] %}
-
         verify_dataset_request();
 
         return execute_requests();
     }
 
     if (nondet %{ req_type == "model_submission" %} != 0) {
-        %{ current_withdrawal = current_request["withdrawal"] %}
-
         verify_submission_request();
 
         return execute_requests();
     }
     if (nondet %{ req_type == "verification" %} != 0) {
-        // TODO verify verification request
+        verify_verification_request();
 
         return execute_requests();
-    } 
+    }
     if (nondet %{ req_type == "rank_models" %} != 0) {
-        // TODO verify verification request
-
-        
-
+        rank_models();
 
         return execute_requests();
-    } 
-    
-    
-    else {
+    } else {
         %{ print("unknown request type: ", current_request) %}
         return execute_requests();
     }

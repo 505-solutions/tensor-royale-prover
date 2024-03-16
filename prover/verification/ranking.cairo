@@ -1,6 +1,8 @@
 from starkware.cairo.common.cairo_builtins import PoseidonBuiltin, SignatureBuiltin
 from starkware.cairo.common.dict_access import DictAccess
 from starkware.cairo.common.math import abs_value
+from starkware.cairo.common.alloc import alloc
+from starkware.cairo.common.usort import usort
 
 from transaction.utils import (
     update_state,
@@ -13,38 +15,127 @@ from types.requests import VerificationRequest
 
 // *
 
-func get_model_error_rate{
+func rank_models{
     poseidon_ptr: PoseidonBuiltin*,
     ecdsa_ptr: SignatureBuiltin*,
     range_check_ptr,
     state_dict: DictAccess*,
     req_output_ptr: RequestOutput*,
-}(model_id: felt) -> felt {
+}() -> (felt, felt*) {
     alloc_locals;
 
-    local num_verifications: felt;
-    %{
-        verifications = current_request["verifications"][ids.model_id] # List of VerificationRequest
-        ids.num_verifications = len(verifications)
-    %}
+    local problem_id: felt;
+    %{ ids.problem_id = current_request["problem_id"] %}
 
-    local verifications: VerificationRequest* = handle_program_input();
-    // TODO: Check that all verifications exist in the state and are for the same problem
+    let (model_ids_len: felt, model_ids: felt*) = handle_program_input();
 
-    // Build the consensus matrix
-    let (local empty_matrix: felt**) = alloc();
-    let (_, matrix: felt**) = build_consensus_matrix(
-        num_verifications,
-        verifications,
-        0,
-        empty_matrix,
-        verifications[0].num_test_problems,
-        verifications[0].class_confidence,
+    let (local empty_arr: felt*) = alloc();
+    let (error_rates_len, error_rates) = build_error_rates_array(
+        model_ids_len, model_ids, 0, empty_arr
     );
 
-    // For each verification get error rate and sort the array to get the most accurate models
-    local real_results: felt** = get_real_results();
-    let error_rate: felt = sum_matrix_error_distances(num_verifications, matrix, real_results);
+    let (sorted_error_rates_len: felt, sorted_error_rates: felt*, multiplicities: felt*) = usort(
+        error_rates_len, error_rates
+    );
 
-    return error_rate;
+    let (local empty_arr: felt*) = alloc();
+    let (sorted_models_len, sorted_models) = build_rankings_array(
+        model_ids_len,
+        model_ids,
+        error_rates_len,
+        error_rates,
+        sorted_error_rates_len,
+        sorted_error_rates,
+        0,
+        empty_arr,
+    );
+
+    let (data_commitment) = poseidon_hash_many(7, arr);
+
+    write_request_to_output(req_output_ptr, data_commitment);
+
+    return ();
+}
+
+//
+
+func build_rankings_array{
+    poseidon_ptr: PoseidonBuiltin*,
+    ecdsa_ptr: SignatureBuiltin*,
+    range_check_ptr,
+    state_dict: DictAccess*,
+}(
+    model_ids_len: felt,
+    model_ids: felt*,
+    unsorted_err_rates_len: felt,
+    unsorted_err_rates: felt*,
+    sorted_err_rates_len: felt,
+    sorted_err_rates: felt*,
+    sorted_models_len: felt,
+    sorted_models: felt*,
+) -> (felt, felt*) {
+    alloc_locals;
+
+    if (sorted_err_rates_len == 0) {
+        return (sorted_models_len, sorted_models);
+    }
+
+    let model_id: felt = find_model_id(
+        model_ids_len, model_ids, unsorted_err_rates_len, unsorted_err_rates, sorted_err_rates[0]
+    );
+
+    assert sorted_models[sorted_models_len] = model_id;
+
+    return build_rankings_array(
+        model_ids_len,
+        model_ids,
+        unsorted_err_rates_len,
+        unsorted_err_rates,
+        sorted_err_rates_len - 1,
+        &sorted_err_rates[1],
+        sorted_models_len + 1,
+        sorted_models,
+    );
+}
+
+func find_model_id{
+    poseidon_ptr: PoseidonBuiltin*,
+    ecdsa_ptr: SignatureBuiltin*,
+    range_check_ptr,
+    state_dict: DictAccess*,
+}(
+    model_ids_len: felt,
+    model_ids: felt*,
+    unsorted_err_rates_len: felt,
+    unsorted_err_rates: felt*,
+    err_rate: felt,
+) -> felt {
+    if (unsorted_err_rates[0] == err_rate) {
+        return model_ids[0];
+    }
+
+    return find_model_id(
+        model_ids_len - 1,
+        &model_ids[1],
+        unsorted_err_rates_len - 1,
+        &unsorted_err_rates_len[1],
+        err_rate,
+    );
+}
+
+func handle_program_input{range_check_ptr}() -> (felt, felt*) {
+    alloc_locals;
+
+    local model_ids_len: felt;
+    local model_ids: felt*;
+    %{
+        models_len = len(current_request["model_ids"])
+        ids.model_ids_len = models_len
+
+        memory[ids.model_ids.address_] = models_address = segments.add()
+        for i in range(models_len):
+            memory[models_address + i] = int(current_request["model_ids"][i])
+    %}
+
+    return (model_ids_len, model_ids);
 }
