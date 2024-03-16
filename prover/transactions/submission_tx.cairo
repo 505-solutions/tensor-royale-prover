@@ -45,6 +45,7 @@ func handle_program_input{range_check_ptr}() -> ModelSubmissionRequest {
     local submission_req: ModelSubmissionRequest;
     %{
         memory[ids.submission_req.address_ + ModelSubmissionRequest.id] = int(current_request["id"])
+        memory[ids.submission_req.address_ + ModelSubmissionRequest.model_id] = int(current_request["model_id"])
         memory[ids.submission_req.address_ + ModelSubmissionRequest.user_address] = int(current_request["user_address"])
         memory[ids.submission_req.address_ + ModelSubmissionRequest.model_commitment] = int(current_request["model_commitment"])
         memory[ids.submission_req.address_ + ModelSubmissionRequest.data_id] = int(current_request["data_id"])
@@ -61,10 +62,11 @@ func hash_submission_req{poseidon_ptr: PoseidonBuiltin*}(
 
     let (local arr: felt*) = alloc();
     assert arr[0] = submission_req.id;
-    assert arr[1] = submission_req.user_address;
-    assert arr[2] = submission_req.model_commitment;
-    assert arr[3] = submission_req.data_id;
-    assert arr[4] = submission_req.problem_id;
+    assert arr[1] = submission_req.model_id;
+    assert arr[2] = submission_req.user_address;
+    assert arr[3] = submission_req.model_commitment;
+    assert arr[4] = submission_req.data_id;
+    assert arr[5] = submission_req.problem_id;
 
     let (res) = poseidon_hash_many(5, arr);
     return res;

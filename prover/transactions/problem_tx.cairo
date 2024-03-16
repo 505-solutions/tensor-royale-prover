@@ -50,13 +50,14 @@ func handle_program_input{range_check_ptr}() -> ProblemRequest {
         memory[ids.problem_req.address_ + ProblemRequest.id] = int(current_request["id"])
         memory[ids.problem_req.address_ + ProblemRequest.payment] = int(current_request["payment"])
         memory[ids.problem_req.address_ + ProblemRequest.deadline] = int(current_request["deadline"])
+        memory[ids.problem_req.address_ + ProblemRequest.desc_hash] = int(current_request["desc_hash"])
 
-        desc_lines = current_request["desc_lines"]
+        # desc_lines = current_request["desc_lines"]
 
-        memory[ids.desc_lines_len] = len(desc_lines)
-        memory[ids.desc_lines] = desc_lines_addr = segments.add()
-        for i in range(len(desc_lines)):
-            memory[desc_lines_addr + i] = int(desc_lines[i])
+        # memory[ids.desc_lines_len] = len(desc_lines)
+        # memory[ids.desc_lines] = desc_lines_addr = segments.add()
+        # for i in range(len(desc_lines)):
+        #     memory[desc_lines_addr + i] = int(desc_lines[i])
     %}
 
     return problem_req;
@@ -72,12 +73,8 @@ func hash_problem_req{poseidon_ptr: PoseidonBuiltin*}(problem_req: ProblemReques
     assert arr[3] = problem_req.id;
     assert arr[4] = problem_req.payment;
     assert arr[5] = problem_req.deadline;
-    assert arr[6] = problem_req.desc_lines_len;
+    assert arr[6] = problem_req.desc_hash;
 
-    let (hash_arr_len, hash_arr) = push_to_array(
-        7, arr, problem_req.desc_lines_len, problem_req.desc_lines
-    );
-
-    let (res) = poseidon_hash_many(hash_arr_len, hash_arr);
+    let (res) = poseidon_hash_many(7, arr);
     return res;
 }

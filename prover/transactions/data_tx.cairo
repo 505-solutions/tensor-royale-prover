@@ -15,7 +15,7 @@ func verify_dataset_request{
     ecdsa_ptr: SignatureBuiltin*,
     range_check_ptr,
     state_dict: DictAccess*,
-    req_output_ptr: RequestOutput*
+    req_output_ptr: RequestOutput*,
 }() {
     alloc_locals;
 
@@ -47,13 +47,14 @@ func handle_program_input{range_check_ptr}() -> DataRequest {
         memory[ids.dataset_req.address_ + DataRequest.id] = int(current_request["id"])
         memory[ids.dataset_req.address_ + DataRequest.dataset_commitment] = int(current_request["dataset_commitment"])
         memory[ids.dataset_req.address_ + DataRequest.problem_id] = int(current_request["problem_id"])
+        memory[ids.dataset_req.address_ + DataRequest.desc_hash] = int(current_request["desc_hash"])
 
-        desc_lines = current_request["desc_lines"]
+        # desc_lines = current_request["desc_lines"]
 
-        memory[ids.desc_lines_len] = len(desc_lines)
-        memory[ids.desc_lines] = desc_lines_addr = segments.add()
-        for i in range(len(desc_lines)):
-            memory[desc_lines_addr + i] = int(desc_lines[i])
+        # memory[ids.desc_lines_len] = len(desc_lines)
+        # memory[ids.desc_lines] = desc_lines_addr = segments.add()
+        # for i in range(len(desc_lines)):
+        #     memory[desc_lines_addr + i] = int(desc_lines[i])
     %}
 
     return dataset_req;
@@ -66,12 +67,8 @@ func hash_dataset_req{poseidon_ptr: PoseidonBuiltin*}(dataset_req: DataRequest) 
     assert arr[0] = dataset_req.id;
     assert arr[1] = dataset_req.dataset_commitment;
     assert arr[2] = dataset_req.problem_id;
-    assert arr[3] = dataset_req.desc_lines_len;
+    assert arr[3] = dataset_req.desc_hash;
 
-    let (hash_arr_len, hash_arr) = push_to_array(
-        4, arr, dataset_req.desc_lines_len, dataset_req.desc_lines
-    );
-
-    let (res) = poseidon_hash_many(hash_arr_len, hash_arr);
+    let (res) = poseidon_hash_many(4, arr);
     return res;
 }

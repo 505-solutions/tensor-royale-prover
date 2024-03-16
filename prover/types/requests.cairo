@@ -5,16 +5,14 @@ struct ProblemRequest {
     title: felt,
     reward: felt,
     deadline: felt,
-    desc_lines_len: felt,
-    desc_lines: felt*,
+    desc_hash: felt,
 }
 
 struct DataRequest {
     id: felt,
     dataset_commitment: felt,
     problem_id: felt,
-    desc_lines_len: felt,
-    desc_lines: felt*,
+    desc_hash: felt,
 }
 
 struct ModelSubmissionRequest {
@@ -27,8 +25,11 @@ struct ModelSubmissionRequest {
 
 struct VerificationRequest {
     id: felt,
+    model_id: felt,
     verifier_address: felt,
     class_confidence: felt,  // matrix_width (likely small)
     num_test_problems: felt,  // matrix_height (likely large)
     evaluations: felt**,
 }
+
+// ******************************

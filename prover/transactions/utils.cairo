@@ -61,6 +61,27 @@ func verify_req_signature{ecdsa_ptr: SignatureBuiltin*}(problem_hash: felt, user
 
 // * ==========================================================
 
+func append_flatend_matrix{poseidon_ptr: PoseidonBuiltin*}(
+    base_arr_len: felt, base_arr: felt*, matrix_width: felt, matrix_height: felt, matrix: felt**
+) -> (res: felt) {
+    if (matrix_height == 0) {
+        return (base_arr_len, base_arr);
+    }
+
+    let row: felt = matrix[0];
+    let (base_arr_len, base_arr) = push_to_array(base_arr_len, base_arr, matrix_width, row);
+
+    return append_flatend_matrix(
+        base_arr_len,
+        base_arr,
+        matrix_width,
+        matrix_height - 1,
+        base_arr,
+        addition_len - 1,
+        &matrix[1],
+    );
+}
+
 func push_to_array{poseidon_ptr: PoseidonBuiltin*}(
     base_arr_len: felt, base_arr: felt*, addition_len: felt, addition: felt*
 ) -> (res: felt) {

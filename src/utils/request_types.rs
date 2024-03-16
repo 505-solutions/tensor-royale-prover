@@ -31,6 +31,7 @@ pub struct ModelSubmissionRequest {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VerificationRequest {
     pub id: String,
+    pub model_id: String,
     pub verifier_address: String,
     pub class_confidence: u32,  // matrix_width (likely small)
     pub num_test_problems: u32, // matrix_height (likely large)

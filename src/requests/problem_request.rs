@@ -7,10 +7,7 @@ use serde_json::Value;
 
 use crate::{
     trees::superficial_tree::SuperficialTree,
-    utils::{
-        crypto_uitls::hash_many,
-        request_types::{DataRequest, ProblemRequest},
-    },
+    utils::{crypto_uitls::hash_many, request_types::ProblemRequest},
 };
 
 pub fn execute_problem_request(
