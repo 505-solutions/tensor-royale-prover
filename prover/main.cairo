@@ -100,29 +100,32 @@ func verify_requests{
 
     %{
         current_request = request_input_data.pop(0) 
-        tx_type = current_request["request_type"]
+        req_type = current_request["request_type"]
     %}
 
-    if (nondet %{ tx_type == "swap" %} != 0) {
-        %{ current_swap = current_request %}
-
-        execute_swap();
+    if (nondet %{ req_type == "problem" %} != 0) {
+        verify_problem_request();
 
         return execute_requests();
     }
 
-    if (nondet %{ tx_type == "deposit" %} != 0) {
+    if (nondet %{ req_type == "dataset" %} != 0) {
         %{ current_deposit = current_request["deposit"] %}
 
-        verify_deposit();
+        verify_dataset_request();
 
         return execute_requests();
     }
 
-    if (nondet %{ tx_type == "withdrawal" %} != 0) {
+    if (nondet %{ req_type == "model_submission" %} != 0) {
         %{ current_withdrawal = current_request["withdrawal"] %}
 
-        verify_withdrawal();
+        verify_submission_request();
+
+        return execute_requests();
+    }
+    if (nondet %{ req_type == "verification" %} != 0) {
+        // TODO verify verification request
 
         return execute_requests();
     } else {
