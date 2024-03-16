@@ -28,7 +28,6 @@ struct ModelSubmissionRequest {
 struct VerificationRequest {
     id: felt,
     verifier_address: felt,
-    model_idx: felt,
     class_confidence: felt,  // matrix_width (likely small)
     num_test_problems: felt,  // matrix_height (likely large)
     evaluations: felt**,
