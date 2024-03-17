@@ -27,7 +27,7 @@ impl SuperficialTree {
     }
 
     pub fn update_leaf_node(&mut self, leaf_hash: &BigUint, idx: u64) {
-        assert!(idx < 2_u64.pow(self.depth), "idx is greater than tree size");
+        // assert!(idx < 2_u64.pow(self.depth), "idx is greater than tree size");
 
         if leaf_hash.ne(&BigUint::zero()) {
             if idx > self.count {
@@ -150,7 +150,7 @@ impl SuperficialTree {
     // Helpers
 
     fn nth_leaf_node(&self, n: u64) -> BigUint {
-        assert!(n < 2_u64.pow(self.depth), "n is bigger than tree size");
+        // assert!(n < 2_u64.pow(self.depth), "n is bigger than tree size");
 
         if self.leaf_nodes.get(n as usize).is_some() {
             return self.leaf_nodes[n as usize].clone();

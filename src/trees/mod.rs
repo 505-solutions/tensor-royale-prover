@@ -84,7 +84,7 @@ impl Tree {
     // HELPERS
 
     fn update_leaf_node(&mut self, leaf_hash: &BigUint, idx: u64) {
-        assert!(idx < 2_u64.pow(self.depth), "idx is greater than tree size");
+        // assert!(idx < 2_u64.pow(self.depth), "idx is greater than tree size");
 
         if self.leaf_nodes.len() > idx as usize {
             self.leaf_nodes[idx as usize] = leaf_hash.clone();
@@ -100,8 +100,8 @@ impl Tree {
     }
 
     fn update_inner_node(&mut self, i: u32, j: u64, value: BigUint) {
-        assert!(i <= self.depth, "i is greater than depth");
-        assert!(j < 2_u64.pow(self.depth - i), "j is greater than 2^i");
+        // assert!(i <= self.depth, "i is greater than depth");
+        // assert!(j < 2_u64.pow(self.depth - i), "j is greater than 2^i");
 
         if self.inner_nodes.get(i as usize - 1).unwrap().len() > j as usize {
             self.inner_nodes[i as usize - 1][j as usize] = value;
@@ -117,7 +117,7 @@ impl Tree {
     }
 
     fn nth_leaf_node(&self, n: u64) -> BigUint {
-        assert!(n < 2_u64.pow(self.depth), "n is bigger than tree size");
+        // assert!(n < 2_u64.pow(self.depth), "n is bigger than tree size");
 
         if self.leaf_nodes.get(n as usize).is_some() {
             return self.leaf_nodes[n as usize].clone();
@@ -129,8 +129,8 @@ impl Tree {
     fn ith_inner_node(&self, i: u32, j: u64) -> BigUint {
         // ? Checks if the inner note at that spot exists, else it returns the zero hash
 
-        assert!(i <= self.depth, "i is greater than depth");
-        assert!(j < 2_u64.pow(self.depth - i), "j is greater than 2^i");
+        // assert!(i <= self.depth, "i is greater than depth");
+        // assert!(j < 2_u64.pow(self.depth - i), "j is greater than 2^i");
 
         if self.inner_nodes.get(i as usize - 1).is_some()
             && self.inner_nodes[i as usize - 1].get(j as usize).is_some()

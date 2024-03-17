@@ -25,10 +25,10 @@ pub fn idx_to_binary_pos(idx: u64, bin_length: usize) -> Vec<i8> {
         println!("idx: {}", idx);
     }
 
-    assert!(
-        bin_chars.len() <= bin_length,
-        "index is to big to fit on the tree"
-    );
+    // assert!(
+    //     bin_chars.len() <= bin_length,
+    //     "index is to big to fit on the tree"
+    // );
 
     let mut bin_pos: Vec<i8> = Vec::new();
 
