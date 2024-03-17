@@ -28,11 +28,11 @@ func verify_submission_request{
     let submission_hash = hash_submission_req(submission_req);
 
     local public_key: felt;
-    %{ ids.public_key = int(current_request["public_key"]) %}
+    %{ ids.public_key = int(current_request["public_key"]) if "public_key" in current_request else 0 %}
     verify_req_signature(submission_hash, public_key);
 
     local state_idx: felt;
-    %{ ids.state_idx = current_request["state_idx"] %}
+    %{ ids.state_idx = current_request["state_index"] %}
     update_state(state_idx, submission_hash);
 
     write_request_to_output(submission_req.id, public_key, submission_hash);
@@ -48,11 +48,11 @@ func handle_program_input{range_check_ptr}() -> ModelSubmissionRequest {
     // & This is the public on_chain deposit information
     local submission_req: ModelSubmissionRequest;
     %{
-        memory[ids.submission_req.address_ + ModelSubmissionRequest.id] = int(current_request["id"])
-        memory[ids.submission_req.address_ + ModelSubmissionRequest.id] = int(current_request["id"])
-        memory[ids.submission_req.address_ + ModelSubmissionRequest.user_address] = int(current_request["user_address"])
-        memory[ids.submission_req.address_ + ModelSubmissionRequest.model_commitment] = int(current_request["model_commitment"])
-        memory[ids.submission_req.address_ + ModelSubmissionRequest.data_id] = int(current_request["data_id"])
+        submission_request = current_request["submission_request"]
+        memory[ids.submission_req.address_ + ids.ModelSubmissionRequest.id] = int(submission_request["id"])
+        memory[ids.submission_req.address_ + ids.ModelSubmissionRequest.user_address] = int(submission_request["author"])
+        memory[ids.submission_req.address_ + ids.ModelSubmissionRequest.model_commitment] = int(submission_request["model"])
+        memory[ids.submission_req.address_ + ids.ModelSubmissionRequest.data_id] = int(submission_request["data_id"])
     %}
 
     return submission_req;

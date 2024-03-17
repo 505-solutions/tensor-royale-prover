@@ -56,8 +56,8 @@ pub fn hash_request(verification_req: &VerificationRequest) -> BigUint {
     let id = BigUint::from_str(&verification_req.id).unwrap();
     let model_id = BigUint::from_str(&verification_req.model_id).unwrap();
     let verifier_address = BigUint::from_str(&verification_req.verifier_address).unwrap();
-    let class_confidence = BigUint::from_u32(verification_req.class_confidence).unwrap();
-    let num_test_problems = BigUint::from_u32(verification_req.num_test_problems).unwrap();
+    let class_confidence = BigUint::from_str(&verification_req.class_confidence).unwrap();
+    let num_test_problems = BigUint::from_str(&verification_req.num_test_problems).unwrap();
 
     let mut hash_inp = vec![
         id,

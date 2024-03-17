@@ -29,11 +29,11 @@ func verify_verification_request{
     let verification_hash = hash_verification_req(verification_req);
 
     local public_key: felt;
-    %{ ids.public_key = int(current_request["public_key"]) %}
+    %{ ids.public_key = int(current_request["public_key"]) if "public_key" in current_request else 0 %}
     verify_req_signature(verification_hash, public_key);
 
     local state_idx: felt;
-    %{ ids.state_idx = current_request["state_idx"] %}
+    %{ ids.state_idx = current_request["state_index"] %}
     update_state(state_idx, verification_hash);
 
     write_request_to_output(verification_req.id, public_key, verification_hash);
@@ -48,10 +48,11 @@ func handle_program_input{range_check_ptr}() -> VerificationRequest {
 
     local verification_req: VerificationRequest;
     %{
-        memory[ids.verification_req.address_ + VerificationRequest.id] = int(current_request["id"])
-        memory[ids.verification_req.address_ + VerificationRequest.verifier_address] = int(current_request["verifier_address"])
-        memory[ids.verification_req.address_ + VerificationRequest.class_confidence] = int(current_request["class_confidence"])
-        memory[ids.verification_req.address_ + VerificationRequest.num_test_problems] = int(current_request["num_test_problems"])
+        verification_request = current_request["verification_request"]
+        memory[ids.verification_req.address_ + ids.VerificationRequest.id] = int(verification_request["id"])
+        memory[ids.verification_req.address_ + ids.VerificationRequest.verifier_address] = int(verification_request["verifier_address"])
+        memory[ids.verification_req.address_ + ids.VerificationRequest.class_confidence] = int(verification_request["class_confidence"])
+        memory[ids.verification_req.address_ + ids.VerificationRequest.num_test_problems] = int(verification_request["num_test_problems"])
 
         rows_len = len(current_request["evaluations"])
         columns_len = len(current_request["evaluations"][0])

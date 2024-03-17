@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-abstract contract TensorRoyale {
+interface IERC20 {
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
+}
+
+contract TensorRoyale {
     struct RequestKey {
         uint256 requestId;
         uint256 publicKey;
@@ -9,7 +17,12 @@ abstract contract TensorRoyale {
     }
 
     mapping(uint256 => RequestKey) public requestKeys;
-    mapping(address => uint256) public requestCommitments;
+    mapping(uint256 => mapping(address => uint256)) public payments;
+
+    address usdcAddress;
+    function setUsdcAddress(address _usdcAddress) external {
+        usdcAddress = _usdcAddress;
+    }
 
     function registerRequest(
         uint256 publicKey,
@@ -25,11 +38,21 @@ abstract contract TensorRoyale {
             requestId: requestId,
             requestCommitment: requestCommitment
         });
+
+        if (usdcPayment == 0) {
+            return;
+        }
+
+        IERC20(usdcAddress).transferFrom(
+            msg.sender,
+            address(this),
+            usdcPayment
+        );
+
+        payments[requestId][msg.sender] = usdcPayment;
     }
 
-    function transitionState(
-        uint256[] calldata programOutput
-    ) external view returns (RequestKey memory) {
+    function transitionState(uint256[] calldata programOutput) external {
         for (uint256 i = 0; i < programOutput.length; i += 3) {
             uint256 requestId = programOutput[i];
             uint256 publicKey = programOutput[i + 1];
@@ -47,6 +70,8 @@ abstract contract TensorRoyale {
                 requestKeys[requestId].requestCommitment == requestCommitment,
                 "Invalid request commitment"
             );
+
+            delete requestKeys[requestId];
         }
     }
 }

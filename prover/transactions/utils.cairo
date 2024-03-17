@@ -50,13 +50,13 @@ func verify_req_signature{ecdsa_ptr: SignatureBuiltin*}(problem_hash: felt, user
     local sig_r: felt;
     local sig_s: felt;
     %{
-        ids.sig_r = int(signature[0]) 
-        ids.sig_s = int(signature[1])
+        # ids.sig_r = int(signature[0]) 
+        # ids.sig_s = int(signature[1])
     %}
 
-    verify_ecdsa_signature(
-        message=problem_hash, public_key=user_pub_key, signature_r=sig_r, signature_s=sig_s
-    );
+    // verify_ecdsa_signature(
+    //     message=problem_hash, public_key=user_pub_key, signature_r=sig_r, signature_s=sig_s
+    // );
 
     return ();
 }

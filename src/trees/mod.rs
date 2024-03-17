@@ -145,81 +145,80 @@ impl Tree {
 
     // I/O Operations --------------------------------------------------
 
-    pub fn store_to_disk(&self) -> Result<(), Box<dyn Error>> {
-        let path = Path::new(&"./storage/state_tree");
-        if !Path::new(path).exists() {
-            fs::create_dir(path)?;
-        }
+    // pub fn store_to_disk(&self) -> Result<(), Box<dyn Error>> {
+    //     let path = Path::new(&"./storage/state_tree");
+    //     // if !Path::new(path).exists() {
+    //     //     fs::create_dir(path)?;
+    //     // }
 
-        let mut file: File = File::create(path)?;
+    //     let mut file: File = File::create(path)?;
 
-        let leaves = &self
-            .leaf_nodes
-            .iter()
-            .map(|x| x.to_bytes_le())
-            .collect::<Vec<Vec<u8>>>();
+    //     let leaves = &self
+    //         .leaf_nodes
+    //         .iter()
+    //         .map(|x| x.to_bytes_le())
+    //         .collect::<Vec<Vec<u8>>>();
 
-        let inner_nodes = self
-            .inner_nodes
-            .iter()
-            .map(|x| x.iter().map(|y| y.to_string()).collect::<Vec<String>>())
-            .collect::<Vec<Vec<String>>>();
+    //     let inner_nodes = self
+    //         .inner_nodes
+    //         .iter()
+    //         .map(|x| x.iter().map(|y| y.to_string()).collect::<Vec<String>>())
+    //         .collect::<Vec<Vec<String>>>();
 
-        let encoded: Vec<u8> =
-            bincode::serialize(&(leaves, inner_nodes, self.root.to_string(), self.depth)).unwrap();
+    //     let encoded: Vec<u8> =
+    //         bincode::serialize(&(leaves, inner_nodes, self.root.to_string(), self.depth)).unwrap();
 
-        file.write_all(&encoded[..])?;
+    //     file.write_all(&encoded[..])?;
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
-    pub fn from_disk(depth: u32) -> Result<Tree, Box<dyn Error>> {
-        let path_str = "./storage/state_tree".to_string();
-        let path = Path::new(&path_str);
+    // pub fn from_disk(depth: u32) -> Result<Tree, Box<dyn Error>> {
+    //     let path_str = "./storage/state_tree".to_string();
+    //     let path = Path::new(&path_str);
 
-        let open_res = File::open(path).ok();
-        if open_res.is_none() {
-            if Path::new(&path_str).exists() {
-                File::create(path)?;
-                return Ok(Tree::new(depth, 0));
-            } else {
-                fs::create_dir(&path_str)?;
-                File::create(path)?;
-                return Ok(Tree::new(depth, 0));
-            }
-        };
+    //     let open_res = File::open(path).ok();
+    //     if open_res.is_none() {
+    //         if Path::new(&path_str).exists() {
+    //             File::create(path)?;
+    //             return Ok(Tree::new(depth, 0));
+    //         } else {
+    //             File::create(path)?;
+    //             return Ok(Tree::new(depth, 0));
+    //         }
+    //     };
 
-        let mut file: File = open_res.unwrap();
-        let mut buf: Vec<u8> = Vec::new();
+    //     let mut file: File = open_res.unwrap();
+    //     let mut buf: Vec<u8> = Vec::new();
 
-        file.read_to_end(&mut buf)?;
+    //     file.read_to_end(&mut buf)?;
 
-        let decoded: (Vec<Vec<u8>>, Vec<Vec<String>>, String, u32) =
-            bincode::deserialize(&buf[..])?;
+    //     let decoded: (Vec<Vec<u8>>, Vec<Vec<String>>, String, u32) =
+    //         bincode::deserialize(&buf[..])?;
 
-        let leaves = decoded
-            .0
-            .iter()
-            .map(|x| BigUint::from_bytes_le(x))
-            .collect();
-        let inner_nodes = decoded
-            .1
-            .iter()
-            .map(|x| {
-                x.iter()
-                    .map(|y| BigUint::from_str(y.as_str()).unwrap())
-                    .collect::<Vec<BigUint>>()
-            })
-            .collect::<Vec<Vec<BigUint>>>();
+    //     let leaves = decoded
+    //         .0
+    //         .iter()
+    //         .map(|x| BigUint::from_bytes_le(x))
+    //         .collect();
+    //     let inner_nodes = decoded
+    //         .1
+    //         .iter()
+    //         .map(|x| {
+    //             x.iter()
+    //                 .map(|y| BigUint::from_str(y.as_str()).unwrap())
+    //                 .collect::<Vec<BigUint>>()
+    //         })
+    //         .collect::<Vec<Vec<BigUint>>>();
 
-        Ok(Tree {
-            leaf_nodes: leaves,
-            inner_nodes,
-            root: BigUint::from_str(&decoded.2.as_str()).unwrap(),
-            depth: decoded.3,
-            shift: 0,
-        })
-    }
+    //     Ok(Tree {
+    //         leaf_nodes: leaves,
+    //         inner_nodes,
+    //         root: BigUint::from_str(&decoded.2.as_str()).unwrap(),
+    //         depth: decoded.3,
+    //         shift: 0,
+    //     })
+    // }
 
     // -----------------------------------------------------------------
 

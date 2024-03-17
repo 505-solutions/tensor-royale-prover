@@ -28,11 +28,11 @@ func verify_problem_request{
     let problem_hash = hash_problem_req(problem_req);
 
     local public_key: felt;
-    %{ ids.public_key = int(current_request["public_key"]) %}
+    %{ ids.public_key = int(current_request["public_key"]) if "public_key" in current_request else 0 %}
     verify_req_signature(problem_hash, public_key);
 
     local state_idx: felt;
-    %{ ids.state_idx = current_request["state_idx"] %}
+    %{ ids.state_idx = current_request["state_index"] %}
     update_state(state_idx, problem_hash);
 
     write_request_to_output(problem_req.id, public_key, problem_hash);
@@ -48,13 +48,14 @@ func handle_program_input{range_check_ptr}() -> ProblemRequest {
     // & This is the public on_chain deposit information
     local problem_req: ProblemRequest;
     %{
-        memory[ids.problem_req.address_ + ProblemRequest.user_address] = int(current_request["user_address"])
-        memory[ids.problem_req.address_ + ProblemRequest.timestamp] = int(current_request["timestamp"])
-        memory[ids.problem_req.address_ + ProblemRequest.title] = int(current_request["title"])
-        memory[ids.problem_req.address_ + ProblemRequest.id] = int(current_request["id"])
-        memory[ids.problem_req.address_ + ProblemRequest.reward] = int(current_request["reward"])
-        memory[ids.problem_req.address_ + ProblemRequest.deadline] = int(current_request["deadline"])
-        memory[ids.problem_req.address_ + ProblemRequest.desc_hash] = int(current_request["desc_hash"])
+        problem_request = current_request["problem_request"]
+        memory[ids.problem_req.address_ + ids.ProblemRequest.user_address] = int(problem_request["user_address"])
+        memory[ids.problem_req.address_ + ids.ProblemRequest.timestamp] = int(problem_request["timestamp"])
+        memory[ids.problem_req.address_ + ids.ProblemRequest.title] = int(problem_request["title"])
+        memory[ids.problem_req.address_ + ids.ProblemRequest.id] = int(problem_request["id"])
+        memory[ids.problem_req.address_ + ids.ProblemRequest.reward] = int(problem_request["reward"])
+        memory[ids.problem_req.address_ + ids.ProblemRequest.deadline] = int(problem_request["deadline"])
+        memory[ids.problem_req.address_ + ids.ProblemRequest.description] = int(problem_request["description"])
 
         # desc_lines = current_request["desc_lines"]
 
@@ -77,7 +78,7 @@ func hash_problem_req{poseidon_ptr: PoseidonBuiltin*}(problem_req: ProblemReques
     assert arr[3] = problem_req.id;
     assert arr[4] = problem_req.reward;
     assert arr[5] = problem_req.deadline;
-    assert arr[6] = problem_req.desc_hash;
+    assert arr[6] = problem_req.description;
 
     let (res) = poseidon_hash_many(7, arr);
     return res;

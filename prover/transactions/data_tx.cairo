@@ -28,11 +28,11 @@ func verify_dataset_request{
     let dataset_hash = hash_dataset_req(dataset_req);
 
     local public_key: felt;
-    %{ ids.public_key = int(current_request["public_key"]) %}
+    %{ ids.public_key = int(current_request["public_key"]) if "public_key" in current_request else 0 %}
     verify_req_signature(dataset_hash, public_key);
 
     local state_idx: felt;
-    %{ ids.state_idx = current_request["state_idx"] %}
+    %{ ids.state_idx = current_request["state_index"] %}
     update_state(state_idx, dataset_hash);
 
     write_request_to_output(dataset_req.id, public_key, dataset_hash);
@@ -48,11 +48,11 @@ func handle_program_input{range_check_ptr}() -> DataRequest {
     // & This is the public on_chain deposit information
     local dataset_req: DataRequest;
     %{
-        data_request = current_request["data_request"]
-        memory[ids.dataset_req.address_ + DataRequest.id] = int(data_request["id"])
-        memory[ids.dataset_req.address_ + DataRequest.dataset_commitment] = int(data_request["dataset_commitment"])
-        memory[ids.dataset_req.address_ + DataRequest.problem_id] = int(data_request["problem_id"])
-        memory[ids.dataset_req.address_ + DataRequest.desc_hash] = int(data_request["desc_hash"])
+        data_request = current_request["dataset_request"]
+        memory[ids.dataset_req.address_ + ids.DataRequest.id] = int(data_request["id"])
+        memory[ids.dataset_req.address_ + ids.DataRequest.dataset_commitment] = int(data_request["file_train"])
+        memory[ids.dataset_req.address_ + ids.DataRequest.problem_id] = int(data_request["problem_id"])
+        memory[ids.dataset_req.address_ + ids.DataRequest.description] = int(data_request["description"])
 
         # desc_lines = current_request["desc_lines"]
 
@@ -72,7 +72,7 @@ func hash_dataset_req{poseidon_ptr: PoseidonBuiltin*}(dataset_req: DataRequest) 
     assert arr[0] = dataset_req.id;
     assert arr[1] = dataset_req.dataset_commitment;
     assert arr[2] = dataset_req.problem_id;
-    assert arr[3] = dataset_req.desc_hash;
+    assert arr[3] = dataset_req.description;
 
     let (res) = poseidon_hash_many(4, arr);
     return res;

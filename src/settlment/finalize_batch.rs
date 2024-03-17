@@ -28,21 +28,21 @@ pub fn finalize_batch(
 
     let swap_output_json = serde_json::to_value(&(*swap_output_json.lock())).unwrap();
     let preimage_json = serde_json::to_value(&preimage_json).unwrap();
-    let prev_state_root = serde_json::to_value(&prev_state_root).unwrap();
-    let new_state_root = serde_json::to_value(&new_state_root).unwrap();
+    let prev_state_root = serde_json::to_value(&prev_state_root.to_string()).unwrap();
+    let new_state_root = serde_json::to_value(&new_state_root.to_string()).unwrap();
     let global_expiration_timestamp = serde_json::to_value(&global_expiration_timestamp).unwrap();
 
     let mut output_json = serde_json::Map::new();
-    output_json.insert(String::from("swap_output_json"), swap_output_json);
-    output_json.insert(String::from("preimage_json"), preimage_json);
     output_json.insert(String::from("prev_state_root"), prev_state_root);
     output_json.insert(String::from("new_state_root"), new_state_root);
     output_json.insert(
         String::from("global_expiration_timestamp"),
         global_expiration_timestamp,
     );
+    output_json.insert(String::from("swap_output_json"), swap_output_json);
+    output_json.insert(String::from("preimage_json"), preimage_json);
 
-    let path = Path::new("../../prover/batch_input.json");
+    let path = Path::new("./prover/batch_input.json");
     std::fs::write(path, serde_json::to_string(&output_json).unwrap()).unwrap();
 
     println!("Transaction batch finalized successfully!");
@@ -67,7 +67,7 @@ fn tree_partition_update(
     preimage_json: &mut Map<String, Value>,
     tree_depth: u32,
 ) -> Result<(BigUint, BigUint), String> {
-    let mut batch_init_tree = Tree::from_disk(tree_depth).unwrap();
+    let mut batch_init_tree = Tree::new(16, 0);
 
     let prev_root = batch_init_tree.root.clone();
 
@@ -76,7 +76,7 @@ fn tree_partition_update(
     let new_root = batch_init_tree.root.clone();
 
     // ? Store the new tree to disk
-    batch_init_tree.store_to_disk().unwrap();
+    // batch_init_tree.store_to_disk().unwrap();
 
     Ok((prev_root, new_root))
 }

@@ -9,6 +9,7 @@ use tensor_royale_prover::{
         submission_request::execute_submission_request,
         verification_request::execute_verification_request,
     },
+    settlment::finalize_batch::{self, finalize_batch},
     trees::superficial_tree::SuperficialTree,
     utils::request_types::{
         DataRequest, ModelSubmissionRequest, ProblemRequest, VerificationRequest,
@@ -101,6 +102,14 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sy
                     println!("tx_commitment: {}", tx_commitment);
 
                     let mut response = Response::from_string(tx_commitment).with_status_code(200);
+                    add_cors(&mut response);
+                    request.respond(response)?;
+                }
+                "/finalize" => {
+                    finalize_batch(&state_tree, &updated_state_hashes, &swap_output_json);
+
+                    let mut response =
+                        Response::from_string("Batch finalized successfully").with_status_code(200);
                     add_cors(&mut response);
                     request.respond(response)?;
                 }

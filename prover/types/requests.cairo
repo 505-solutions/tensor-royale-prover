@@ -5,14 +5,14 @@ struct ProblemRequest {
     title: felt,
     reward: felt,
     deadline: felt,
-    desc_hash: felt,
+    description: felt,
 }
 
 struct DataRequest {
     id: felt,
     dataset_commitment: felt,
     problem_id: felt,
-    desc_hash: felt,
+    description: felt,
 }
 
 struct ModelSubmissionRequest {

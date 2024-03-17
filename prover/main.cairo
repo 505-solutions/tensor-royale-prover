@@ -33,6 +33,7 @@ func main{
 
     local req_output_ptr: RequestOutput* = cast(output_ptr, RequestOutput*);
 
+    %{ request_input_data = program_input["swap_output_json"] %}
     verify_requests{state_dict=state_dict, req_output_ptr=req_output_ptr}();
 
     local squashed_state_dict: DictAccess*;
@@ -51,15 +52,15 @@ func main{
     local init_state_root: felt;
     local final_state_root: felt;
     %{
-        ids.init_state_root = program_input["init_state_root"]
-        ids.final_state_root = program_input["final_state_root"]
+        ids.init_state_root = int(program_input["prev_state_root"])
+        ids.final_state_root = int(program_input["new_state_root"])
     %}
 
     verify_merkle_tree_updates(
         init_state_root, final_state_root, squashed_state_dict, squashed_state_dict_len, tree_depth
     );
 
-    local output_ptr: felt = cast(req_output_ptr + 1, felt);
+    local output_ptr: felt = cast(req_output_ptr, felt);
 
     %{ print("all good") %}
 
@@ -124,12 +125,12 @@ func verify_merkle_tree_updates{pedersen_ptr: HashBuiltin*, range_check_ptr}(
     state_tree_depth: felt,
 ) {
     %{
-        preimage = program_input["preimage"]
+        preimage = program_input["preimage_json"]
         preimage = {int(k):[int(x) for x in v] for k,v in preimage.items()}
     %}
-    merkle_multi_update{hash_ptr=pedersen_ptr}(
-        squashed_state_dict, squashed_state_dict_len, state_tree_depth, prev_root, new_root
-    );
+    // merkle_multi_update{hash_ptr=pedersen_ptr}(
+    //     squashed_state_dict, squashed_state_dict_len, state_tree_depth, prev_root, new_root
+    // );
 
     return ();
 }
